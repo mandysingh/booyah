@@ -3,6 +3,7 @@
 from nltk.corpus import conll2000
 import nltk, re, pprint
 from BeautifulSoup import BeautifulSoup
+import requests
 
 
 def remove_tags(raw_text):
@@ -40,42 +41,92 @@ def ner_tag(sentences):
 
     
 grammar = r"""
-  NP: {<DT|JJ|NN.*>+}          # Chunk sequences of DT, JJ, NN
+  NP: {<CD|DT|JJ|NN.*>+}          # Chunk sequences of DT, JJ, NN
   PP: {<IN><NP>}               # Chunk prepositions followed by NP
   VP: {<VB.*><NP|PP|CLAUSE>+$} # Chunk verbs and their arguments
   CLAUSE: {<NP><VP>}           # Chunk NP, VP
   """
 cp = nltk.RegexpParser(grammar)
 
+
+grammar_project = r'''
+    NP: ^<``>?<DT>?<JJ>?{<NNP.*>+}<V.*>
+'''
+cp_project = nltk.RegexpParser(grammar_project)
+
 def chunk(sentences):
+    #print sentences
     near_by = []
     for sent in sentences:
+        # filter near by sentences
+        is_near = [(word.lower(), index) for index,(word,pos) in enumerate(sent) if pos == 'IN' and word.lower() in {'near', 'behind'}]
+        #print is_near
+        if not is_near:
+            continue
+        else:
+            sent = sent[is_near[0][1]:]
         parsed_sent = cp.parse(sent)
-        near_by += extract_near(parsed_sent)
+        nn = extract_near(parsed_sent)
+        #print nn
+        near_by += nn
     print near_by
 
+
+def chunk_project(sentences):
+    #print sentences
+    all_chunks = []
+    for sent in sentences:
+        all_chunks += extract_near(cp_project.parse(sent))
+    return all_chunks
 
 
 def extract_near(tree):
     siblings = []
-    is_near = [word.lower() for word,pos in tree.leaves() if pos == 'IN' and word.lower() == 'near' ]
-    if is_near:
-        nps = extract_np(tree)
-        for np in nps:
-            siblings.append(extract_nn(np))
+    nps = extract_np(tree)
+    for np in nps:
+        siblings.append(extract_nn(np))
     return siblings
 
 
 def extract_np(tree):
+    #print "np ", tree
     return list(tree.subtrees(filter=lambda x: x.label() =='NP'))
 
 
 def extract_nn(tree):
-    return " ".join([t[0] if t[1].startswith('NN') else "" for t in tree.leaves() ])
+    #print "nn ", tree
+    return " ".join([t[0] if t[1].startswith('') else "" for t in tree.leaves() ])
 
 #ie_preprocess(document)
 
 
 def print_nearby(doc):
+    doc = remove_tags(doc)
     sentences = ie_preprocess(doc)
-    chunk(sentences)
+    #chunk(sentences)
+    chunked = chunk_project(sentences)
+    if chunked:
+        print chunked
+
+
+
+def make_req():
+    payload = {'q': '*:*', "wt": "json"}
+    payload["fq"] = ["DOCUMENT_TYPE:DIRTY_LISTING", "LISTING_POSTED_DATE:[2016-08-01T00:00:00Z TO *]", "LISTING_STATUS:Active"
+    , "UNIT_TYPE:Apartment", "LISTING_CATEGORY:Primary"]
+
+    #payload["fq"].append("LISTING_ID:2206753")
+
+    payload["rows"] = 200
+    payload["fl"] = ["LISTING_DESCRIPTION","LISTING_ID"]
+    host = "http://localhost:8983/solr/collection_mp/select"
+    #q=*:*&fq=DOCUMENT_TYPE:DIRTY_LISTING&fq=LISTING_POSTED_DATE:[2016-08-01T00:00:00Z TO *]&fq=LISTING_STATUS:Active&fq=UNIT_TYPE:Apartment&fq=LISTING_CATEGORY:Primary
+    #&sort=LISTING_QUALITY_SCORE desc, LISTING_SELLER_COMPANY_SCORE desc&rows=2000&fl=LISTING_DESCRIPTION&wt=json
+    req = requests.get(host, params=payload)
+    docs = req.json()["response"]["docs"]
+
+    for doc in docs:
+        desc = doc["LISTING_DESCRIPTION"]
+        print doc["LISTING_ID"]
+        print_nearby(desc)
+
