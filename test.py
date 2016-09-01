@@ -6,16 +6,23 @@ from BeautifulSoup import BeautifulSoup
 import requests
 from haversine import haversine
 import time
+import re
 
 
-nearby_safe_list = ['bank', 'banks', 'atm','atms', 'distance', 
+nearby_safe_list = ['bank', 'banks', 'atm','atms', 'distance', 'bus', 'train', 'train station', 'the city', 'city', 'a','the', 'this', 'that', 'all',
  'bus stand', 'Share auto facility', 'public school', 'school', 'schools', 'public schools', 'market', 'subji mandi',
- 'mandi', 'railway station', 'metro station', 'garment showroom',
+ 'mandi', 'railway station', 'metro station', 'garment showroom', 'companies', 'company' 'track',
  'mall', 'malls', 'departmental store', 'store', 'stores','distance', 'multiplex', 'park', 'parks', 'green park', 'green parks',
  'the upcoming bus terminal', 'the metro junction', 'upcoming bus terminal', 'upcoming bus stand',
  'metro junction', 'the metro station', 'sabji mandi', 'froot mandi', 'good markets', 'all amenities', 'walking distance',
-  'city market', 'bus stops', 'bus stop', 'airports', 'airport', 'railway stations', 'college', 'colleges'
+  'city market', 'bus stops', 'bus stop', 'airports', 'airport', 'railway stations', 'college', 'colleges', 'market school',
+  'hospital', 'hospitals', "a prime location", 'sale' , 'walkable distance', 'the bus stop', 'ground'
 ]
+
+nearby_safe_regex = [re.compile("\d+ ?mins?"), re.compile("\d+ ?kms?") ,re.compile("\d+ ?bhk") , re.compile("\d+"), re.compile("flats?")
+, re.compile("apartments?"), re.compile("\d+ ?sqfts?"),  re.compile('(the )?shopping malls?') ,
+ re.compile("'[(a )(the )]?hill station"), re.compile("[(the )(a )]?[(ideal )(prime )]?locations?"), 
+ re.compile("(swimming )?pool"), re.compile("club( house)?"), re.compile("floors?")]
 
 
 def remove_tags(raw_text):
@@ -128,12 +135,12 @@ def print_results(doc):
 
 def make_req():
     payload = {'q': '*:*', "wt": "json"}
-    payload["fq"] = ["DOCUMENT_TYPE:DIRTY_LISTING", "LISTING_POSTED_DATE:[2016-08-01T00:00:00Z TO *]", "LISTING_STATUS:Active"
+    payload["fq"] = ["DOCUMENT_TYPE:DIRTY_LISTING", "LISTING_POSTED_DATE:[2016-08-01T00:00:00Z TO *]", "LISTING_STATUS:RAW"
     , "UNIT_TYPE:Apartment", "LISTING_CATEGORY:Primary"]
 
     #payload["fq"].append("LISTING_ID:2206753")
 
-    payload["rows"] = 50
+    payload["rows"] = 200
     payload["fl"] = ["LISTING_DESCRIPTION","LISTING_ID"]
     payload["fl"] += ["LISTING_LATITUDE","LISTING_LONGITUDE"]
     host = "http://localhost:8983/solr/collection_mp/select"
@@ -150,6 +157,7 @@ def make_req():
     metrics["nearby_passed_listings"] = []
     metrics["nearby_failed_listings"] = []
 
+    nnn = []
     for doc in docs:
         desc = doc["LISTING_DESCRIPTION"]
         lat = doc.get("LISTING_LATITUDE", 0.0)
@@ -171,10 +179,11 @@ def make_req():
             metrics["nearby_total"] += 1
             val = True
             for n in nearby:
-                if (n.lower() in nearby_safe_list) or match_with_google(lat, lng, n, 25):
+                if  n in nearby_safe_list or any(regex.match(n.lower()) for regex in nearby_safe_regex) or match_with_google(lat, lng, n, 25):
                     time.sleep(1)  
                 else:
                     val = False
+                    nnn.append(n)
                     break
             if val:
                 metrics["nearby_passed"] += 1
@@ -184,6 +193,7 @@ def make_req():
         project = chunk_project(sentences)
         ### update metrics
     print metrics
+    print nnn
 
 
 
