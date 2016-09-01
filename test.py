@@ -4,6 +4,18 @@ from nltk.corpus import conll2000
 import nltk, re, pprint
 from BeautifulSoup import BeautifulSoup
 import requests
+from haversine import haversine
+import time
+
+
+nearby_safe_list = ['bank', 'banks', 'atm','atms', 'distance', 
+ 'bus stand', 'Share auto facility', 'public school', 'school', 'schools', 'public schools', 'market', 'subji mandi',
+ 'mandi', 'railway station', 'metro station', 'garment showroom',
+ 'mall', 'malls', 'departmental store', 'store', 'stores','distance', 'multiplex', 'park', 'parks', 'green park', 'green parks',
+ 'the upcoming bus terminal', 'the metro junction', 'upcoming bus terminal', 'upcoming bus stand',
+ 'metro junction', 'the metro station', 'sabji mandi', 'froot mandi', 'good markets', 'all amenities', 'walking distance',
+  'city market', 'bus stops', 'bus stop', 'airports', 'airport', 'railway stations', 'college', 'colleges'
+]
 
 
 def remove_tags(raw_text):
@@ -20,7 +32,8 @@ Loan facility available 80% on this flat.\nLuxurious 1 king size bedroom with 1 
 
 
 def find_bhk(text):
-    return re.search('(\d+)[\s]{,3}(bedrooms?|bhk|BHK|Bhk)', doc3).group(1)
+    rs = re.search('(\d+)[\s]{,3}([bB]edrooms?|bhk|BHK|Bhk|rk|RK|Rk)', text)
+    return rs.group(1) if rs else ""
 
 
 def ie_preprocess(document):
@@ -50,11 +63,11 @@ cp = nltk.RegexpParser(grammar)
 
 
 grammar_project = r'''
-    NP: ^<``>?<DT>?<JJ>?{<NNP.*>+}<V.*>
+    NP: ^<``>?<DT>?<JJ>?{<NNP.*>+}<IN|V.*>
 '''
 cp_project = nltk.RegexpParser(grammar_project)
 
-def chunk(sentences):
+def chunk_near(sentences):
     #print sentences
     near_by = []
     for sent in sentences:
@@ -69,7 +82,7 @@ def chunk(sentences):
         nn = extract_near(parsed_sent)
         #print nn
         near_by += nn
-    print near_by
+    return near_by
 
 
 def chunk_project(sentences):
@@ -100,13 +113,16 @@ def extract_nn(tree):
 #ie_preprocess(document)
 
 
-def print_nearby(doc):
+def print_results(doc):
     doc = remove_tags(doc)
     sentences = ie_preprocess(doc)
-    #chunk(sentences)
+    print sentences
+    nearby = chunk_near(sentences)
+    if nearby:
+        print "near ", nearby
     chunked = chunk_project(sentences)
     if chunked:
-        print chunked
+        print "project", chunked
 
 
 
@@ -117,16 +133,78 @@ def make_req():
 
     #payload["fq"].append("LISTING_ID:2206753")
 
-    payload["rows"] = 200
+    payload["rows"] = 50
     payload["fl"] = ["LISTING_DESCRIPTION","LISTING_ID"]
+    payload["fl"] += ["LISTING_LATITUDE","LISTING_LONGITUDE"]
     host = "http://localhost:8983/solr/collection_mp/select"
     #q=*:*&fq=DOCUMENT_TYPE:DIRTY_LISTING&fq=LISTING_POSTED_DATE:[2016-08-01T00:00:00Z TO *]&fq=LISTING_STATUS:Active&fq=UNIT_TYPE:Apartment&fq=LISTING_CATEGORY:Primary
     #&sort=LISTING_QUALITY_SCORE desc, LISTING_SELLER_COMPANY_SCORE desc&rows=2000&fl=LISTING_DESCRIPTION&wt=json
     req = requests.get(host, params=payload)
     docs = req.json()["response"]["docs"]
 
+    ##### metrics ######
+    metrics = {}
+    metrics["total"] = 0
+    metrics["nearby_total"] = 0
+    metrics["nearby_passed"] = 0
+    metrics["nearby_passed_listings"] = []
+    metrics["nearby_failed_listings"] = []
+
     for doc in docs:
         desc = doc["LISTING_DESCRIPTION"]
-        print doc["LISTING_ID"]
-        print_nearby(desc)
+        lat = doc.get("LISTING_LATITUDE", 0.0)
+        lng = doc.get("LISTING_LONGITUDE", 0.0)
+        listing_id = doc["LISTING_ID"]
+        print desc
+        print find_bhk(desc)
+        print doc["LISTING_ID"], doc.get("LISTING_LATITUDE", 0.0), doc.get("LISTING_LONGITUDE", 0.0)
+        print_results(desc)
+        print ""
+
+        ### start processing
+        metrics["total"] += 1
+
+        desc = remove_tags(desc)
+        sentences = ie_preprocess(desc)
+        nearby = chunk_near(sentences)
+        if nearby:
+            metrics["nearby_total"] += 1
+            val = True
+            for n in nearby:
+                if (n.lower() in nearby_safe_list) or match_with_google(lat, lng, n, 25):
+                    time.sleep(1)  
+                else:
+                    val = False
+                    break
+            if val:
+                metrics["nearby_passed"] += 1
+                metrics["nearby_passed_listings"].append(listing_id)
+            else:
+                metrics["nearby_failed_listings"].append(listing_id)
+        project = chunk_project(sentences)
+        ### update metrics
+    print metrics
+
+
+
+
+def match_with_google(lat,lng,nearbyPlace, max_distance):
+    host = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+    payload = {"key": "AIzaSyAYnfVHW00e8YRcA-yhrhhYtc-dSvDvnuY"}
+    payload["location"] = str(lat) + "," + str(lng)
+    payload["rankBy"] = "distance"
+    payload["name"] = nearbyPlace
+
+
+    req = requests.get(host, params=payload)
+
+    for rs in req.json().get("results", []):
+        loc = rs.get("geometry", {}).get("location", {})
+        if loc:
+            place_lat_lng = (loc["lat"], loc["lng"])
+            return haversine(place_lat_lng, (lat,lng)) <= max_distance
+
+    return False
+
+
 
