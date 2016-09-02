@@ -7,6 +7,7 @@ import requests
 from haversine import haversine
 import time
 import re
+import profanity_filter
 
 
 nearby_safe_list = ['bank', 'banks', 'atm','atms', 'distance', 'bus', 'train', 'train station', 'the city', 'city', 'a','the', 'this', 'that', 'all',
@@ -184,6 +185,10 @@ def make_req():
     metrics["project_passed_listings"] = []
     metrics["project_failed_listings"] = []
 
+    metrics["profanity_passed"] = 0
+    metrics["profanity_passed_listings"] = []
+    metrics["profanity_failed_listings"] = []
+
     nnn = []
     area = []
     for doc in docs:
@@ -203,9 +208,20 @@ def make_req():
         print ""
 
         ### start processing
+        desc = remove_tags(desc)
         metrics["total"] += 1
 
-        desc = remove_tags(desc)
+        f = profanity_filter.Filter(desc, clean_word='####unicorn###')
+        f = f.clean()
+        print 
+        if '####unicorn###' in f:
+            metrics["profanity_failed_listings"].append(listing_id)
+            continue
+        else:
+            metrics["profanity_passed"] += 1
+            metrics["profanity_passed_listings"].append(listing_id)
+        #### 
+        
         sentences = ie_preprocess(desc)
         nearby = chunk_near(sentences)
         if nearby:
