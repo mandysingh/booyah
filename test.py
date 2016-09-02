@@ -72,6 +72,11 @@ grammar = r"""
   """
 cp = nltk.RegexpParser(grammar)
 
+grammar_project_1 = r"""MEDIA: {<DT>?<JJ>*<NN.*>+}
+               RELATION: {<V.*>}
+                         {<DT>?<JJ>*<NN.*>+}
+               ENTITY: {<NN.*>}"""
+
 
 grammar_project = r'''
     NP: ^<``>?<DT>?<JJ>?{<NNP.*>+}<IN|V.*>
@@ -148,6 +153,8 @@ def make_req():
     payload["fl"] = ["LISTING_DESCRIPTION","LISTING_ID"]
     payload["fl"] += ["LISTING_LATITUDE","LISTING_LONGITUDE"]
     payload["fl"] += ["BEDROOMS", "SIZE"]
+    payload["fl"] += ["PROJECT_NAME", "PROJECT_DB_STATUS"]
+
     host = "http://localhost:8983/solr/collection_mp/select"
     #q=*:*&fq=DOCUMENT_TYPE:DIRTY_LISTING&fq=LISTING_POSTED_DATE:[2016-08-01T00:00:00Z TO *]&fq=LISTING_STATUS:Active&fq=UNIT_TYPE:Apartment&fq=LISTING_CATEGORY:Primary
     #&sort=LISTING_QUALITY_SCORE desc, LISTING_SELLER_COMPANY_SCORE desc&rows=2000&fl=LISTING_DESCRIPTION&wt=json
@@ -172,6 +179,11 @@ def make_req():
     metrics["size_passed_listings"] = []
     metrics["size_failed_listings"] = []
 
+    metrics["project_total"] = 0
+    metrics["project_passed"] = 0
+    metrics["project_passed_listings"] = []
+    metrics["project_failed_listings"] = []
+
     nnn = []
     area = []
     for doc in docs:
@@ -181,11 +193,13 @@ def make_req():
         listing_id = doc["LISTING_ID"]
         bedroom = str(doc["BEDROOMS"])
         size = doc["SIZE"]
+        project_name = doc["PROJECT_NAME"]
+        project_status = doc["PROJECT_DB_STATUS"]
 
         print desc
         print find_bhk(desc)
         print doc["LISTING_ID"], doc.get("LISTING_LATITUDE", 0.0), doc.get("LISTING_LONGITUDE", 0.0)
-        #print_results(desc)
+        print_results(desc)
         print ""
 
         ### start processing
@@ -209,7 +223,6 @@ def make_req():
                 metrics["nearby_passed_listings"].append(listing_id)
             else:
                 metrics["nearby_failed_listings"].append(listing_id)
-        project = chunk_project(sentences)
 
         ## bhk check
         bhk_found = find_bhk(desc)
@@ -227,14 +240,24 @@ def make_req():
         if size_found:
             metrics["size_total"] += 1
 
+
             if int(size_found) == int(size):
                 metrics["size_passed"] += 1
                 metrics["size_passed_listings"].append(listing_id)
             else:
                 metrics["size_failed_listings"].append(listing_id)
 
-        #area.append(find_area(desc))
-        print "AREA ", find_area(desc), ": ", size
+        # project check
+        project_found = chunk_project(sentences)
+        for project in project_found:
+            metrics["project_total"] += 1
+            if project_name != "Dummy" and project_name == project:
+                metrics["project_passed"] += 1
+                metrics["project_passed_listings"].append(listing_id)
+            else:
+                metrics["nearby_failed_listings"].append(listing_id)
+                break
+
 
         ### update metrics
     #print metrics
