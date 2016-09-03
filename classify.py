@@ -52,14 +52,14 @@ def ie_preprocess(sentence):
     return sentence
 
 
-def main(ddd):
+def main(ddd, listing_ids):
 	f = open('real_estate_classifier.pickle', 'rb')
 	classifier = pickle.load(f)
 	f.close()
-
-	featureset_nnn = [ (id , features(text,stopwords)) for id, text in make_req(200,200)]
-	ddd = ie_preprocess(ddd.lower())
-	featureset_nnn.append((0000,features(ddd,stopwords)))
+	#print "ssdj", listing_ids
+	featureset_nnn = [ (id , features(text,stopwords)) for id, text in make_req(listing_ids, 0,200)]
+	#ddd = ie_preprocess(ddd.lower())
+	#featureset_nnn.append((0000,features(ddd,stopwords)))
 
 	rst = {}
 	rst["total"] = 0
@@ -69,7 +69,7 @@ def main(ddd):
 	rst["failed_listings"] = []
 	for id, n in featureset_nnn :
 		rst["total"] += 1
-		#print not classifier.classify(n)
+		print classifier.classify(n)
 		if not classifier.classify(n):
 			rst["passed"] = rst["passed"] + 1
 			rst["passed_listings"].append(id)
@@ -81,13 +81,21 @@ def main(ddd):
 
 
 
-def make_req(start=0, rows=200):
+def make_req(listing_ids, start=0, rows=200):
     payload = {'q': '*:*', "wt": "json"}
-    payload["fq"] = ["DOCUMENT_TYPE:DIRTY_LISTING", "LISTING_POSTED_DATE:[2016-08-01T00:00:00Z TO *]", "LISTING_STATUS:RAW"
-    , "UNIT_TYPE:Apartment", "LISTING_CATEGORY:Primary"]
+    payload["fq"] = ["DOCUMENT_TYPE:DIRTY_LISTING"]
+    #payload["fq"] += ["LISTING_POSTED_DATE:[2016-08-01T00:00:00Z TO *]", "LISTING_STATUS:RAW"
+    #, "UNIT_TYPE:Apartment"]
+
+    #payload["fq"] += ["LISTING_CATEGORY:Primary"]
+
+    #print "listings: ", listing_ids
+    if listing_ids :
+    	payload["fq"] += ["LISTING_ID: (%s)" %( " OR ".join(listing_ids) ,) ]
 
     #payload["fq"].append("LISTING_ID:2206753")
-
+    print payload
+    
     payload["rows"] = rows
     payload["start"] = start
     payload["fl"] = ["LISTING_DESCRIPTION","LISTING_ID"]
@@ -100,7 +108,8 @@ def make_req(start=0, rows=200):
     #&sort=LISTING_QUALITY_SCORE desc, LISTING_SELLER_COMPANY_SCORE desc&rows=2000&fl=LISTING_DESCRIPTION&wt=json
     req = requests.get(host, params=payload)
     docs = req.json()["response"]["docs"]
-
+    print docs
+    print
     sent = []
     for doc in docs:
     	desc = doc["LISTING_DESCRIPTION"]
@@ -114,4 +123,6 @@ def make_req(start=0, rows=200):
 
 
 if __name__ == '__main__':
-	main(ddd)
+	print  sys.argv[1:]
+	listing_ids = sys.argv[1:]
+	main(ddd, listing_ids)
