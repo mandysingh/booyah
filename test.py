@@ -8,6 +8,7 @@ from haversine import haversine
 import time
 import re
 import profanity_filter
+import sys
 
 
 nearby_safe_list = ['bank', 'banks', 'atm','atms', 'distance', 'bus', 'train', 'train station', 'the city', 'city', 'a','the', 'this', 'that', 'all',
@@ -143,12 +144,13 @@ def print_results(doc):
 
 
 
-def make_req():
+def make_req(listing_ids):
     payload = {'q': '*:*', "wt": "json"}
-    payload["fq"] = ["DOCUMENT_TYPE:DIRTY_LISTING", "LISTING_POSTED_DATE:[2016-08-01T00:00:00Z TO *]", "LISTING_STATUS:RAW"
-    , "UNIT_TYPE:Apartment", "LISTING_CATEGORY:Primary"]
+    payload["fq"] = ["DOCUMENT_TYPE:DIRTY_LISTING"]
+    #, "LISTING_POSTED_DATE:[2016-08-01T00:00:00Z TO *]", "LISTING_STATUS:RAW"
+    #, "UNIT_TYPE:Apartment", "LISTING_CATEGORY:Primary"]
 
-    #payload["fq"].append("LISTING_ID:2206753")
+    payload["fq"].append("LISTING_ID: (%s) " %(" OR ".join(listing_ids)))
 
     payload["rows"] = 200
     payload["fl"] = ["LISTING_DESCRIPTION","LISTING_ID"]
@@ -228,7 +230,7 @@ def make_req():
             metrics["nearby_total"] += 1
             val = True
             for n in nearby:
-                if  n in nearby_safe_list or any(regex.match(n.lower()) for regex in nearby_safe_regex) :#or match_with_google(lat, lng, n, 25):
+                if  n in nearby_safe_list or any(regex.match(n.lower()) for regex in nearby_safe_regex) or match_with_google(lat, lng, n, 25):
                     time.sleep(1)  
                 else:
                     val = False
@@ -277,7 +279,10 @@ def make_req():
 
         ### update metrics
     #print metrics
-    for metric in metrics.keys():
+
+    keys = list(metrics.keys())
+    keys.sort()
+    for metric in keys:
         print metric," : ", metrics[metric] if not metric.endswith("listings") else " "
     print nnn
     print area
@@ -305,7 +310,8 @@ def match_with_google(lat,lng,nearbyPlace, max_distance):
 
 
 if __name__ == '__main__':
-    make_req()
+    listing_ids = sys.argv[1:]
+    make_req(listing_ids)
 
 
 
