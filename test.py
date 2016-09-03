@@ -201,11 +201,11 @@ def make_req():
         project_name = doc["PROJECT_NAME"]
         project_status = doc["PROJECT_DB_STATUS"]
 
-        print desc
-        print find_bhk(desc)
-        print doc["LISTING_ID"], doc.get("LISTING_LATITUDE", 0.0), doc.get("LISTING_LONGITUDE", 0.0)
-        print_results(desc)
-        print ""
+        #print desc
+        #print find_bhk(desc)
+        #print doc["LISTING_ID"], doc.get("LISTING_LATITUDE", 0.0), doc.get("LISTING_LONGITUDE", 0.0)
+        #print_results(desc)
+        #print ""
 
         ### start processing
         desc = remove_tags(desc)
@@ -213,7 +213,7 @@ def make_req():
 
         f = profanity_filter.Filter(desc, clean_word='####unicorn###')
         f = f.clean()
-        print 
+        
         if '####unicorn###' in f:
             metrics["profanity_failed_listings"].append(listing_id)
             continue
@@ -302,6 +302,10 @@ def match_with_google(lat,lng,nearbyPlace, max_distance):
             return haversine(place_lat_lng, (lat,lng)) <= max_distance
 
     return False
+
+
+if __name__ == '__main__':
+    make_req()
 
 
 
