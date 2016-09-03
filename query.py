@@ -10,6 +10,7 @@ from nltk.classify import PositiveNaiveBayesClassifier
 from nltk.classify.maxent import MaxentClassifier
 from nltk.classify.decisiontree import DecisionTreeClassifier
 from nltk.classify.api import MultiClassifierI
+import pickle
 
 
 def remove_tags(raw_text):
@@ -151,16 +152,19 @@ def train(positive_featuresets, unlabeled_featuresets, n=90):
 			rs["passed"] += 1
     	else:
     		rs["failed"] += 1
-	print "test_p", rs
+	#print "test_p", rs
 	for n in test_n :
 		if not classifier.classify(n):
 			rs["passed"] += 1
 		else:
 			rs["failed"] +=1
 
-	print rs
+	#print rs
 	print "Accuracy", rs['passed']*1.0/(rs['passed'] + rs["failed"])*1.0
-
+	# save classifier
+	f = open('real_estate_classifier.pickle', 'wb')
+	pickle.dump(classifier, f)
+	f.close()
 	return classifier
 
 
@@ -187,6 +191,7 @@ ddd = ie_preprocess(ddd.lower())
 featureset_nnn.append(features(ddd,stopwords))
 
 t = 0
+rst = {}
 rst["passed"] = 0
 rst["failed"] = 0
 for n in featureset_nnn :
