@@ -1,0 +1,142 @@
+<html>
+<body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<meta charset='UTF-8'>
+<title></title>
+<style type='text/css'>@media (max-width: 480px) { table { width: 100%; } img { max-width: 100%; height: auto; } td { box-sizing: border-box; width: 100%; display: block; } td.fixHeight { height: 20px; } .curves { display: none; } .tableBor { border-top: 1px solid #e92028; border-bottom: 1px solid #e92028; } .resImg img { width: 100%; } .blnk { display: none; } .content td { padding: 0 10px; } .content img { margin: auto!important; } .detail td { padding: 0; } }</style>
+<table align='center' bgcolor='#ffffff' border='0' cellpadding='0' cellspacing='0' class='tableBor' width='520'>
+   <tbody>
+      <tr class='curves'>
+         <td height='10'>
+            <table border='0' cellpadding='0' cellspacing='0' width='100%'>
+               <tbody>
+                  <tr>
+                     <td height='10' width='10'><img alt='' height='10' src='https://cdn.proptiger.com/images/top-left-curve.gif' style='display: block; margin: 0; padding: 0;' width='10' /></td>
+                     <td height='9' style='border-top: 1px solid #e92028;'><img alt='' height='9' src='https://cdn.proptiger.com/images/trans-img.png' style='display: block; margin: 0; padding: 0;' width='1' /></td>
+                     <td height='10' width='10'><img alt='' height='10' src='https://cdn.proptiger.com/images/top-right-curve.gif' style='display: block; margin: 0; padding: 0;' width='10' /></td>
+                  </tr>
+               </tbody>
+            </table>
+         </td>
+      </tr>
+      <tr>
+         <td style='border-left: 1px solid #e92028; border-right: 1px solid #e92028;'>
+         <table border='0' cellpadding='0' cellspacing='0' width='100%'>
+            <tbody>
+               <tr>
+                  <td height='10'><img alt='' height='10' src='https://cdn.proptiger.com/images/trans-img.png' style='display: block; margin: 0; padding: 0;' width='1' /></td>
+               </tr>
+               <tr>
+                  <td align='center' height='30'><img height='31' src='https://cdn.proptiger.com/images/makaan-logo.jpg' style='display: inline-block; margin: 0; padding: 0;' width='117' /></td>
+               </tr>
+               <tr>
+                  <td height='40'><img alt='' height='40' src='https://cdn.proptiger.com/images/trans-img.png' style='display: block; margin: 0; padding: 0;' width='1' /></td>
+               </tr>
+               <tr>
+                  <td>
+                     <table border='0' cellpadding='0' cellspacing='0' width='100%'>
+                        <tbody>
+                           <tr>
+                              <td class='blnk' width='30'><img alt='' height='20' src='https://cdn.proptiger.com/images/trans-img.png' style='display: block; margin: 0; padding: 0;' width='30' /></td>
+                              <td>
+                                 <table border='0' cellpadding='0' cellspacing='0' class='content' width='100%'>
+                                    <tbody>
+                                       
+                                       <tr>
+                                          <td height='20'><img alt='' height='20' src='https://cdn.proptiger.com/images/trans-img.png' style='display: block; margin: 0; padding: 0;' width='1' /></td>
+                                       </tr>
+                                       <script>
+
+function myFunction(bedroom, city , unitid) {
+var data = {"BEDROOMS":bedroom,"CITY_ID":city,"UNIT_TYPE_ID":unitid};
+console.log(data);
+        $.ajax({
+               type: "POST",
+               url :"http://127.0.0.1:80/estimator/app/v1/price-prediction/?trainer_type=AREA",
+               data: data,
+               dataType:"json",
+               success: function(data){
+                    var obj = jQuery.parseJSON(data)
+                   //$('#abc').html(data)
+                    alert("Data: " + data);
+                     }
+               }); 
+}
+</script>
+
+ <center><form>
+    BEDROOM:&nbsp
+    <input type="text" id="bedroom" name="bedroom">&nbsp
+    <br> <br>
+    CITY:&nbsp
+    <input type="text" id="city" name="city">&nbsp
+    <br> 
+    <br>
+    UNITTYPEID:&nbsp
+    <input type="text" id="unitTypeId" name="unitTypeId">&nbsp
+    <br> 
+
+ <input type="button" onclick="myFunction(document.getElementById('bedroom').value,
+                                    document.getElementById('city').value, document.getElementById('unitTypeId').value)" value="Submit"></center>
+                                      
+                                     
+                                       <tr>
+                                          <td height='20'><img alt='' height='20' src='https://cdn.proptiger.com/images/trans-img.png' style='display: block; margin: 0; padding: 0;' width='1' /></td>
+                                       </tr>
+                                    </tbody>
+                                 </table>
+                              </td>
+                              <td class='blnk' width='30'><img alt='' height='20' src='https://cdn.proptiger.com/images/trans-img.png' style='display: block; margin: 0; padding: 0;' width='30' /></td>
+                           </tr>
+                        </tbody>
+                     </table>
+                  </td>
+               </tr>
+               <tr>
+                  <td height='30'><img alt='' height='30' src='https://cdn.proptiger.com/images/trans-img.png' style='display: block; margin: 0; padding: 0;' width='1' /></td>
+               </tr>
+               <tr>
+                  <td bgcolor='#dcdcdc' height='1'><img alt='' height='1' src='https://cdn.proptiger.com/images/trans-img.png' style='display: block; margin: 0; padding: 0;' width='50' /></td>
+               </tr>
+               <tr>
+                  <td height='30'><img alt='' height='30' src='https://cdn.proptiger.com/images/trans-img.png' style='display: block; margin: 0; padding: 0;' width='1' /></td>
+               </tr>
+               <tr><td align='center' style='font-family: arial; color: #4a4a4a; font-size: 20px;'>stay tuned for more</td></tr>
+               <tr>
+                  <td height='30'><img alt='' height='30' src='https://cdn.proptiger.com/images/trans-img.png' style='display: block; margin: 0; padding: 0;' width='1' /></td>
+               </tr>
+               <tr>
+                  <td align='center'><span style='padding: 0 10px; display: inline-block;'><a href='https://www.facebook.com/makaan' target='_blank'><img height='33' src='https://cdn.proptiger.com/images/fb-icon.png' style='display: block; margin: 0; padding: 0;' width='20' /></a></span> <span style='padding: 0 10px; display: inline-block;'><a href='https://twitter.com/makaan' target='_blank'><img height='27' src='https://cdn.proptiger.com/images/twitter-icon.png' style='display: block; margin: 0; padding: 0;' width='31' /></a></span> <span style='padding: 0 10px; display: inline-block;'><a href='https://www.linkedin.com/company/makaan-com-pvt-ltd' target='_blank'><img height='31' src='https://cdn.proptiger.com/images/linkedin-icon.png' style='display: block; margin: 0; padding: 0;' width='32' /></a></span> <span style='padding: 0 10px; display: inline-block;'><a href='https://plus.google.com/+Makaandotcom' target='_blank'><img height='31' src='https://cdn.proptiger.com/images/gp-icon.png' style='display: block; margin: 0; padding: 0;' width='24' /></a></span> <span style='padding: 0 10px; display: inline-block;'><a href='https://www.youtube.com/user/makaanchannel' target='_blank'><img height='24' src='https://cdn.proptiger.com/images/youtube-icon.png' style='display: block; margin: 0; padding: 0;' width='32' /></a></span></td>
+               </tr>
+               <tr>
+                  <td height='30'><img alt='' height='30' src='https://cdn.proptiger.com/images/trans-img.png' style='display: block; margin: 0; padding: 0;' width='1' /></td>
+               </tr>
+               <tr><td align='center' style='font-family: arial; font-size: 14px; color: #4a4a4a;'>if you want to get off the ride, hit <a href='${unSubscribedLink}' style='color: #4a4a4a;' target='_blank'>unsubscribe</a></td></tr>
+               <tr>
+                  <td height='20'><img alt='' height='20' src='https://cdn.proptiger.com/images/trans-img.png' style='display: block; margin: 0; padding: 0;' width='1' /></td>
+               </tr>
+               <tr><td align='center' style='font-family: arial; font-size: 12px; color: #999999;'>Copyright © 2016 Makaan.com. All rights reserved.</td></tr>
+               <tr>
+                  <td height='20'><img alt='' height='20' src='https://cdn.proptiger.com/images/trans-img.png' style='display: block; margin: 0; padding: 0;' width='1' /></td>
+               </tr>
+            </tbody>
+         </table>
+         </td>
+      </tr>
+      <tr class='curves'>
+         <td height='10'>
+            <table border='0' cellpadding='0' cellspacing='0' width='100%'>
+               <tbody>
+                  <tr>
+                     <td height='10' width='10'><img alt='' height='10' src='https://cdn.proptiger.com/images/bottom-left-curve.gif' style='display: block; margin: 0; padding: 0;' width='10' /></td>
+                     <td height='9' style='border-bottom: 1px solid #e92028;'><img alt='' height='9' src='https://cdn.proptiger.com/images/trans-img.png' style='display: block; margin: 0; padding: 0;' width='1' /></td>
+                     <td height='10' width='10'><img alt='' height='10' src='https://cdn.proptiger.com/images/bottom-right-curve.gif' style='display: block; margin: 0; padding: 0;' width='10' /></td>
+                  </tr>
+               </tbody>
+            </table>
+         </td>
+      </tr>
+   </tbody>
+</table>
+</body>
+</html>
